@@ -1,0 +1,3 @@
+go version
+
+go path
