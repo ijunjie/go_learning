@@ -8,8 +8,8 @@ import (
 )
 
 func TestSquare(t *testing.T) {
-	inputs := [...]int{1, 2, 3}
-	expected := [...]int{1, 4, 9}
+	inputs := []int{1, 2, 3}
+	expected := []int{1, 4, 9}
 	for i := 0; i < len(inputs); i++ {
 		ret := square(inputs[i])
 		if ret != expected[i] {
@@ -32,8 +32,8 @@ func TestFatalInCode(t *testing.T) {
 }
 
 func TestSquareAssert(t *testing.T) {
-	inputs := [...]int{1, 2, 3}
-	expected := [...]int{1, 4, 9}
+	inputs := []int{1, 2, 3}
+	expected := []int{1, 4, 9}
 	for i := 0; i < len(inputs); i++ {
 		ret := square(inputs[i])
 		assert.Equal(t, expected[i], ret)
