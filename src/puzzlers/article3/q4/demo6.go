@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
-	"puzzlers/article3/q2/lib"
+	"puzzlers/article3/q4/lib"
+	// in "puzzlers/article3/q4/lib/internal" // 此行无法通过编译。
+	//"os"
 )
 
 var name string
@@ -13,5 +15,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	lib5.Hello(name)
+	lib.Hello(name)
+	//in.Hello(os.Stdout, name)
 }
