@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 )
 
 var name string
@@ -13,5 +12,5 @@ func init() {
 
 func main() {
 	flag.Parse()
-	fmt.Printf("Hello, %s!\n", name)
+	hello(name)
 }

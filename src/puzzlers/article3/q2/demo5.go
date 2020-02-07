@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"puzzlers/article3/q2/lib"
 )
 
 var name string
@@ -13,5 +13,5 @@ func init() {
 
 func main() {
 	flag.Parse()
-	fmt.Printf("Hello, %s!\n", name)
+	lib.Hello(name)
 }

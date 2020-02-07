@@ -1,6 +1,7 @@
 package reflect
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -11,11 +12,17 @@ func TestReflect(t *testing.T) {
 	t.Log(typeOfA.Name(), typeOfA.Kind())
 
 	type cat struct {
+		Name string
+		Type int `json:"type" id:"100"`
 	}
 
 	aCat := cat{}
 	typeOfCat := reflect.TypeOf(aCat)
 	t.Log(typeOfCat.Name(), typeOfCat.Kind())
+	for i:=0; i<typeOfCat.NumField();i++ {
+		fieldType := typeOfCat.Field(i)
+		fmt.Printf("name: %v  tag: '%v'\n", fieldType.Name, fieldType.Tag)
+	}
 
 	type Enum int
 	const (
