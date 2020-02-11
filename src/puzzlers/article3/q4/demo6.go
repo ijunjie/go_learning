@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"puzzlers/article3/q4/lib"
-	// in "puzzlers/article3/q4/lib/internal" // 此行无法通过编译。
+	// in "puzzlers/article3/q4/lib/internalx" // 此行无法通过编译。
 	//"os"
 )
 
