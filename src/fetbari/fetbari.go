@@ -30,8 +30,11 @@ func main() {
 	yarnResourceManager, _ := yarnResourceManager(ambari, username, password, clusterName)
 	nameNodeHost, _ := nameNodeHost(ambari, username, password, clusterName)
 	metricsURL := fmt.Sprintf("http://%s/ws/v1/cluster/metrics", yarnResourceManager)
-	vcores, _ := vcores(metricsURL)
+	vcores, mem, _ := vcoresAndMem(metricsURL)
+	memGB := mem / 1024
+	calculatedCU := memGB / 4
 
+	fmt.Printf("%21s: %-30s\n", "Fetbari Version", "1.1")
 	fmt.Printf("%21s: %-30s\n", "Cluster Name", clusterName)
 	host := fmt.Sprintf("http://%s:8080", ambari)
 	fmt.Printf("%21s: %-30s\n", "Host", host)
@@ -40,11 +43,14 @@ func main() {
 	fmt.Printf("%21s: %-30s\n", "Yarn Resource Manager", yarnResourceManager)
 	fmt.Printf("%21s: %-30s\n", "Name Node Host", nameNodeHost)
 	fmt.Printf("%21s: %-30d\n", "Total Vcores", vcores)
+	fmt.Printf("%21s: %-30d\n", "Total MemMB", mem)
+	fmt.Printf("%21s: %-30d\n", "Total MemGB", memGB)
+	fmt.Printf("%21s: %-30d\n", "Total CU(MemGB/4)", calculatedCU)
 	envNumber := onlineOrOffline(env)
 	fmt.Printf("%21s: %-30d\n", "Env", envNumber)
 
 	format := `INSERT INTO cluster_config (cluster_name,host,root_cu_num,basic_key,rm_host,nm_host,is_default,timestamp,file_type,cluster_type,cluster_kind,hadoop_master_ip,ingress) VALUES ('%s','%s',%d,'%s','%s','%s',1,now(),'core-site,hdfs-site,hive-site,yarn-site,spark2-defaults',%d,0,'%s','{"kdm":"http://some-addr"}');`
-	sql := fmt.Sprintf(format, clusterName, host, vcores, basicKey, yarnResourceManager, nameNodeHost, envNumber, ambari)
+	sql := fmt.Sprintf(format, clusterName, host, calculatedCU, basicKey, yarnResourceManager, nameNodeHost, envNumber, ambari)
 	fmt.Printf("%21s: %-30s\n", "Insert SQL Sample", sql)
 }
 
@@ -212,18 +218,19 @@ type getCoreSiteResponse struct {
 	Items []item4 `json:"items"`
 }
 
-func vcores(url string) (int, error) {
+func vcoresAndMem(url string) (int, int, error) {
 	body, err := httpGet(url, "", "")
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	var res metricsResponse
 	_ = json.Unmarshal(body, &res)
-	return res.ClusterMetrics.TotalVirtualCores, nil
+	return res.ClusterMetrics.TotalVirtualCores, res.ClusterMetrics.TotalMB, nil
 }
 
 type clusterMetrics struct {
 	TotalVirtualCores int `json:"totalVirtualCores"`
+	TotalMB           int `json:"totalMB"`
 }
 type metricsResponse struct {
 	ClusterMetrics clusterMetrics `json:"clusterMetrics"`
