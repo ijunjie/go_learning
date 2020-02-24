@@ -15,10 +15,13 @@ type InnerData struct {
 	 a int
 }
 
-func passByValue(inFunc *Data) *Data {
-	fmt.Printf("inFunc value: %+v\n", *inFunc)
-	fmt.Printf("inFunc ptr: %p\n", inFunc)
-	inFunc.complax = []int{22}
+// 值传递测试函数
+func passByValue(inFunc Data) Data {
+	// 输出参数的成员情况
+	fmt.Printf("inFunc value: %+v\n", inFunc)
+	// 打印inFunc的指针
+	fmt.Printf("inFunc ptr: %p\n", &inFunc)
+	inFunc.complax = []int{222}
 	return inFunc
 }
 
@@ -30,16 +33,16 @@ func TestPassByValue(t *testing.T) {
 		ptr: &InnerData{1},
 	}
 
-	t.Logf("in value: %+v\n", in)
-	t.Logf("in ptr: %p\n", &in)
+	fmt.Printf("in value: %+v\n", in)
+	fmt.Printf("in ptr: %p\n", &in)
 
 
-	out := passByValue(&in)
+	out := passByValue(in)
 
-	t.Logf("out value: %+v\n", *out)
-	t.Logf("out ptr: %p\n", out)
+	fmt.Printf("out value: %+v\n", out)
+	fmt.Printf("out ptr: %p\n", &out)
 
 
-	t.Logf("in again value: %+v\n", in)
-	t.Logf("in again ptr: %p\n", &in)
+	fmt.Printf("in again value: %+v\n", in)
+	fmt.Printf("in again ptr: %p\n", &in)
 }
