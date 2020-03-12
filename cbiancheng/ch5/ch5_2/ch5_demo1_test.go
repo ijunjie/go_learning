@@ -1,4 +1,4 @@
-package ch5
+package ch5_2
 
 import "testing"
 
@@ -16,7 +16,7 @@ func resolveTime(seconds int) (day int, hour int, minute int) {
 }
 
 func TestSeconds(t *testing.T) {
-	t.Log(resolveTime(1000))
+	t.Log(resolveTime(3600))
 	_, hour, minute := resolveTime(18000)
 	t.Log(hour, minute)
 
