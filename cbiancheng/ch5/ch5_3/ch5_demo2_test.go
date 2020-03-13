@@ -21,7 +21,8 @@ func passByValue(inFunc Data) Data {
 	fmt.Printf("inFunc value: %+v\n", inFunc)
 	// 打印inFunc的指针
 	fmt.Printf("inFunc ptr: %p\n", &inFunc)
-	inFunc.complax = []int{222}
+	inFunc.instance.a = 888
+	inFunc.ptr.a = 222
 	return inFunc
 }
 
@@ -35,14 +36,18 @@ func TestPassByValue(t *testing.T) {
 
 	fmt.Printf("in value: %+v\n", in)
 	fmt.Printf("in ptr: %p\n", &in)
-
+	fmt.Printf("in ptr value: %v\n", *in.ptr)
+	fmt.Println("************")
 
 	out := passByValue(in)
 
 	fmt.Printf("out value: %+v\n", out)
 	fmt.Printf("out ptr: %p\n", &out)
+	fmt.Printf("out ptr value: %v\n", *out.ptr)
+	fmt.Println("************")
 
 
 	fmt.Printf("in again value: %+v\n", in)
 	fmt.Printf("in again ptr: %p\n", &in)
+	fmt.Printf("in again ptr value: %v\n", *in.ptr)
 }
