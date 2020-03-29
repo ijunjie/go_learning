@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"gfdemo/app/model/user"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/util/gvalid"
 )
@@ -31,6 +33,17 @@ func SignUp(data *SignUpInput) error {
 	if !CheckNickName(data.Nickname) {
 		return errors.New(fmt.Sprintf("昵称 %s 已经存在", data.Nickname))
 	}
+
+	var entity *user.Entity
+	if err := gconv.Struct(data, &entity); err != nil {
+		return err
+	}
+
+	entity.CreateTime = gtime.Now()
+	if _, err := user.Save(entity); err != nil {
+		return err
+	}
+	return nil
 }
 
 func checkPassport(passport string) bool {
