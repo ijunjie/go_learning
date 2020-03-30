@@ -17,6 +17,7 @@ const (
 )
 
 func main() {
+	fmt.Printf("%21s: %-30s\n", "Fetbari Version", "1.2")
 	argCount := len(os.Args[1:])
 	if argCount != 4 {
 		fmt.Println("Usage: fetbari {ambari server ip} {username} {password} {online/offline}")
@@ -46,15 +47,19 @@ func main() {
 	if err4 != nil {
 		log.Fatal(err4)
 	}
+	calculatedCU := vcores
+
 	memGB := mem / 1024
-	calculatedCU := memGB / 4
+	quarterMem := memGB / 4
+	if quarterMem < vcores {
+		fmt.Printf("%21s: %-30s\n", "### WARNING ###", "TotalMemoryGB should be at least 4 times or more of vcores!!!")
+	}
 	host := fmt.Sprintf(hostTmpl, ambari)
 	basicKey := common.Base64Encode(username, password)
 	envNumber := common.OnlineOrOffline(env)
 	sql := fmt.Sprintf(sqlTmpl, clusterName, host, calculatedCU, basicKey,
 		yarnResourceManager, nameNodeHost, envNumber, ambari)
 
-	fmt.Printf("%21s: %-30s\n", "Fetbari Version", "1.1")
 	fmt.Printf("%21s: %-30s\n", "Cluster Name", clusterName)
 	fmt.Printf("%21s: %-30s\n", "Host", host)
 	fmt.Printf("%21s: %-30s\n", "Authorization", basicKey)
@@ -63,7 +68,7 @@ func main() {
 	fmt.Printf("%21s: %-30d\n", "Total Vcores", vcores)
 	fmt.Printf("%21s: %-30d\n", "Total MemMB", mem)
 	fmt.Printf("%21s: %-30d\n", "Total MemGB", memGB)
-	fmt.Printf("%21s: %-30d\n", "Total CU(MemGB/4)", calculatedCU)
+	fmt.Printf("%21s: %-30d\n", "Total CU", calculatedCU)
 	fmt.Printf("%21s: %-30d\n", "Env", envNumber)
 	fmt.Printf("%21s: %-30s\n", "Insert SQL Sample", sql)
 }
