@@ -21,7 +21,7 @@
 
 # 数据库连接
 [database]
-    link  = "mysql:root:123456@tcp(127.0.0.1:3306)/test"
+    link  = "mysql:root:123456@tcp(10.69.69.232:8086)/gfdemo"
     debug = true
     # 数据库日志对象配置
     [database.logger]

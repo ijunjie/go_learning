@@ -18,11 +18,20 @@ type Foo struct {
 	Age int
 }
 
+func a(x func(int) int) int {
+	return x(5)
+}
+
 func main() {
-	var a *Foo
-	var b Foo
-	fmt.Println(&a)
-	fmt.Printf("%p\n", &b)
+
+	r := a(func(a int) int {
+		return a * 2
+	})
+	fmt.Println(r)
+	//var a *Foo
+	//var b Foo
+	//fmt.Println(&a)
+	//fmt.Printf("%p\n", &b)
 	//s := g.Server()
 	//s.BindHandler("/register", func(r *ghttp.Request) {
 	//	var req *RegisterReq

@@ -4,10 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"gfdemo/app/model/user"
+	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gvalid"
+)
+
+const (
+	USER_SESSION_MARK = "user_info"
 )
 
 type SignUpInput struct {
@@ -18,8 +24,8 @@ type SignUpInput struct {
 }
 
 func SignUp(data *SignUpInput) error {
-	err := gvalid.CheckStruct(data, nil)
-	if err != nil {
+
+	if err := gvalid.CheckStruct(data, nil); err != nil {
 		return errors.New(err.FirstString())
 	}
 	if data.Nickname == "" {
@@ -34,7 +40,7 @@ func SignUp(data *SignUpInput) error {
 		return errors.New(fmt.Sprintf("昵称 %s 已经存在", data.Nickname))
 	}
 
-	var entity *user.Entity
+	var entity user.Entity
 	if err := gconv.Struct(data, &entity); err != nil {
 		return err
 	}
@@ -61,4 +67,21 @@ func CheckNickName(nickname string) bool {
 	} else {
 		return i == 0
 	}
+}
+
+func SignIn(passport string, password string, session *ghttp.Session) error {
+	one, err := user.FindOne("passport=? and password=?", passport, password)
+	if err != nil {
+		return err
+	}
+	if one == nil {
+		return errors.New("账号或密码错误")
+	}
+	return session.Set(USER_SESSION_MARK, one)
+}
+
+// 判断用户是否已经登录
+func IsSignedIn(session *ghttp.Session) bool {
+	glog.Infof("session: %+v", session.Map())
+	return session.Contains(USER_SESSION_MARK)
 }
