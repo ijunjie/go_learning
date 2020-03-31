@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	ch1 := make(chan int, 2)
+	ch1 := make(chan int, 10)
 	go func() {
 		for i := 0; i < 10; i++ {
 			fmt.Printf("Sender: sending element %v...\n", i)
