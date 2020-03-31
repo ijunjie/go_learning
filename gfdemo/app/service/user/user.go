@@ -32,7 +32,7 @@ func SignUp(data *SignUpInput) error {
 		data.Nickname = data.Passport
 	}
 
-	if !checkPassport(data.Passport) {
+	if !CheckPassport(data.Passport) {
 		return errors.New(fmt.Sprintf("账号 %s 已经存在", data.Passport))
 	}
 
@@ -52,7 +52,7 @@ func SignUp(data *SignUpInput) error {
 	return nil
 }
 
-func checkPassport(passport string) bool {
+func CheckPassport(passport string) bool {
 	count, err := user.FindCount("passport", passport)
 	if err != nil {
 		return false
@@ -84,4 +84,14 @@ func SignIn(passport string, password string, session *ghttp.Session) error {
 func IsSignedIn(session *ghttp.Session) bool {
 	glog.Infof("session: %+v", session.Map())
 	return session.Contains(USER_SESSION_MARK)
+}
+
+func SignOut(session *ghttp.Session) error {
+	return session.Remove(USER_SESSION_MARK)
+}
+
+func GetProfile(session *ghttp.Session) (u *user.Entity) {
+	var r user.Entity
+	_ = session.GetStruct(USER_SESSION_MARK, &r)
+	return &r
 }

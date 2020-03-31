@@ -1,8 +1,11 @@
 package boot
 
-import "fmt"
+import (
+	"github.com/gogf/gf-swagger/swagger"
+	"github.com/gogf/gf/frame/g"
+)
 
 func init() {
-	// g.Server()
-	fmt.Println("boot init")
+	s := g.Server()
+	s.Plugin(&swagger.Swagger{})
 }

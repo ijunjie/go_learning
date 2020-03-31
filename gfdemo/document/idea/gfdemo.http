@@ -1,0 +1,36 @@
+### sign up
+POST http://{{host}}:{{port}}/user/signup
+Content-Type: application/json
+
+{
+  "nickname": "bbb",
+  "passport": "bbb@x.com",
+  "password": 123456,
+  "password2": 123456
+}
+
+### profile(not logged in)
+GET http://{{host}}:{{port}}/user/profile
+
+### SignIn
+POST http://{{host}}:{{port}}/user/signin
+Content-Type: application/json
+
+{
+  "passport": "aaa@x.com",
+  "password": 123456
+}
+
+### is signed in
+GET http://{{host}}:{{port}}/user/issignedin
+Cookie: gfsessionid=C1OXFUAY4X407BLBMC
+
+### profile(logged in)
+GET http://{{host}}:{{port}}/user/profile
+Cookie: gfsessionid=C1OXFUAY4X407BLBMC
+
+### sign out(logged in)
+GET http://{{host}}:{{port}}/user/signout
+Cookie: gfsessionid=C1OXFUAY4X407BLBMC
+###
+
