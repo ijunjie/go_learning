@@ -16,5 +16,5 @@ func printToStd(contents string) (n int, err error) {
 func TestFunc(t *testing.T) {
 	var p Printer
 	p = printToStd
-	p("something")
+	_, _ = p("something")
 }
