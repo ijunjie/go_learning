@@ -17,11 +17,11 @@ const (
 )
 
 func main() {
-	fmt.Printf("%21s: %-30s\n", "Fetbari Version", "1.2")
+	fmt.Printf("%21s: %-30s\n", "Fetbari Version", "1.3")
 	argCount := len(os.Args[1:])
 	if argCount != 4 {
-		fmt.Println("Usage: fetbari <ambari-server-ip> <username> <password> <online|offline>")
-		fmt.Println("Example: fetbari 10.10.10.10 admin admin online")
+		fmt.Printf("%21s: %-30s\n", "Usage","fetbari <ambari server ip> <username> <password> <online|offline>")
+		fmt.Printf("%21s: %-30s\n", "Example","fetbari 10.10.10.10 admin admin online")
 		return
 	}
 
