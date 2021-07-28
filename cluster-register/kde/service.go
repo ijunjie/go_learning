@@ -14,8 +14,15 @@ const (
 	metricsUrlTmpl  = "http://%s/ws/v1/cluster/metrics"
 )
 
-// 组装
-type KdeInfoResult = struct {
+type KdeInfoRequest struct {
+	KdeHost  string
+	KdePort  int
+	Username string
+	Password string
+	KdeType  string
+}
+
+type KdeInfoResult struct {
 	ClusterName         string
 	Host                string
 	BasicKey            string
@@ -29,7 +36,22 @@ type KdeInfoResult = struct {
 	HadoopMasterIp      string
 }
 
-func KdeInfo(kdeHost string, kdePort int, username, password, kdeType string) (*KdeInfoResult, error) {
+func (info *KdeInfoResult) ToClusterConfigInsert() *infra.ClusterConfigInsert {
+	return &infra.ClusterConfigInsert{
+		ClusterName:    info.ClusterName,
+		Host:           info.Host,
+		RootCuNum:      info.Vcores,
+		BasicKey:       info.BasicKey,
+		RmHost:         info.YarnResourceManager,
+		NmHost:         info.NameNodeHost,
+		ClusterType:    info.Env,
+		HadoopMasterIp: info.HadoopMasterIp,
+	}
+}
+
+func KdeInfo(request *KdeInfoRequest) (*KdeInfoResult, error) {
+	// kdeHost string, kdePort int, username, password, kdeType string
+	kdeHost, kdePort, username, password, kdeType := request.KdeHost, request.KdePort, request.Username, request.Password, request.KdeType
 	ambari := fmt.Sprintf("%s:%d", kdeHost, kdePort)
 	clusterName, err1 := clusterName(ambari, username, password)
 	if err1 != nil {

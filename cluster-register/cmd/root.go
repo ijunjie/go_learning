@@ -1,12 +1,45 @@
 package cmd
 
 import (
+	"cluster-register/infra"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 
 	"github.com/spf13/viper"
 )
+
+// 子命令通用 flag names
+const (
+	flagWriteToDb   = "write-to-db"
+	flagIgnoreError = "ignore-error"
+	flagDbHost      = "db-host"
+	flagDbPort      = "db-port"
+	flagDbUsername  = "db-username"
+	flagDbPassword  = "db-password"
+	flagDatabase    = "database"
+)
+
+// 子命令通用 param
+type dbParamStruct struct {
+	writeToDB   bool
+	ignoreError bool
+	host        string
+	port        int
+	username    string
+	password    string
+	database    string
+}
+
+func (param *dbParamStruct) ToDBConnectInfo() *infra.DBConnectInfo {
+	return &infra.DBConnectInfo{
+		Host:     param.host,
+		Port:     param.port,
+		Username: param.username,
+		Password: param.password,
+		Database: param.database,
+	}
+}
 
 var cfgFile string
 

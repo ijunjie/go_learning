@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// http get with auth
+// HttpGet http get with auth
 func HttpGet(url, username, password string) ([]byte, error) {
 	req, err1 := http.NewRequest("GET", url, nil)
 	if err1 != nil {

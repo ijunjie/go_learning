@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type DBConfigParam = struct {
+type DBConnectInfo struct {
 	Host     string
 	Port     int
 	Username string
@@ -31,7 +31,7 @@ const (
 	insertsql = `INSERT INTO cluster_config (cluster_name,host,root_cu_num,basic_key,rm_host,nm_host,is_default,timestamp,file_type,cluster_type,cluster_kind,hadoop_master_ip,ingress) VALUES ( ?, ?, ?, ?, ?, ?, 1, now(), 'core-site,hdfs-site,hive-site,yarn-site,spark2-defaults', ?, 0, ?, '{"kdm":"http://some-addr"}')`
 )
 
-func InsertClusterConfig(dbConfig *DBConfigParam, data *ClusterConfigInsert) (int64, error) {
+func InsertClusterConfig(dbConfig *DBConnectInfo, data *ClusterConfigInsert) (int64, error) {
 	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8",
 		dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Database)
 	db, _ := sql.Open("mysql", dataSource)

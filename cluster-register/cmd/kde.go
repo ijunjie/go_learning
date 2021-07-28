@@ -9,18 +9,35 @@ import (
 	"log"
 )
 
-type kdeConfigParam = struct {
+const (
+	flagHost     = "host"
+	flagPort     = "port"
+	flagUsername = "username"
+	flagPassword = "password"
+	flagType     = "type"
+)
+
+type kdeParamStruct struct {
 	host     string
 	port     int
 	username string
 	password string
+	kdeType  string
 }
 
-var kdeConfig = &kdeConfigParam{}
-var kdeType string
-var writeToDB = false
-var dbConfig = &infra.DBConfigParam{}
-var ignoreError = false
+func (param *kdeParamStruct) toKdeInfoRequest() *kde.KdeInfoRequest {
+	return &kde.KdeInfoRequest{
+		KdeHost:  param.host,
+		KdePort:  param.port,
+		Username: param.username,
+		Password: param.password,
+		KdeType:  param.kdeType,
+	}
+}
+
+var kdeParam = &kdeParamStruct{}
+
+var dbParam = &dbParamStruct{}
 
 var kdeCmd = &cobra.Command{
 	Use:   "kde --host=kde-host --port=8080 --username=admin --password=admin --type={online|offline} [...other flags]",
@@ -37,42 +54,42 @@ Show info only:
 	Long: `Register KDE(ambari) as a cluster_config to resource-manager.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		if kdeType != "online" && kdeType != "offline" {
-			log.Printf("Error: flag \"%s\" value should be \"online\" or \"offline\"\n", "type")
+		if kdeParam.kdeType != "online" && kdeParam.kdeType != "offline" {
+			log.Printf("Error: flag \"%s\" value should be \"online\" or \"offline\"\n", flagType)
 			return
 		}
-		if writeToDB {
+		if dbParam.writeToDB {
 			undefinedFlag := 0
-			if dbConfig.Host == "" {
+			if dbParam.host == "" {
 				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-host")
 				undefinedFlag = undefinedFlag + 1
 			}
-			if dbConfig.Port == 0 {
+			if dbParam.port == 0 {
 				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-port")
 				undefinedFlag = undefinedFlag + 1
 			}
-			if dbConfig.Username == "" {
+			if dbParam.username == "" {
 				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-username")
 				undefinedFlag = undefinedFlag + 1
 			}
-			if dbConfig.Password == "" {
+			if dbParam.password == "" {
 				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-password")
 				undefinedFlag = undefinedFlag + 1
 			}
 			if undefinedFlag > 0 {
 				log.Println()
-				fmt.Printf("If \"%s\" is true, flags below are required: \n", "write-to-db")
-				fmt.Println("\t --db-host")
-				fmt.Println("\t --db-port")
-				fmt.Println("\t --db-username")
-				fmt.Println("\t --db-password")
+				fmt.Printf("If \"%s\" is true, flags below are required: \n", flagWriteToDb)
+				fmt.Printf("\t --%s\n", flagDbHost)
+				fmt.Printf("\t --%s\n", flagDbPort)
+				fmt.Printf("\t --%s\n", flagDbUsername)
+				fmt.Printf("\t --%s\n", flagDbPassword)
 				return
 			}
 		}
 
 		// 不需要 http://, e.g: 10.69.75.29:8080
-
-		info, err := kde.KdeInfo(kdeConfig.host, kdeConfig.port, kdeConfig.username, kdeConfig.password, kdeType)
+		kdeInfoRequest := kdeParam.toKdeInfoRequest()
+		info, err := kde.KdeInfo(kdeInfoRequest)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -84,26 +101,17 @@ Show info only:
 		quarterMem := info.MemGB / 4
 		badRatio := quarterMem < info.Vcores
 		if badRatio {
-			if !ignoreError {
+			if !dbParam.ignoreError {
 				log.Fatalf("\033[1;37;41m%s\033[0m\n",
 					"Error: TotalMemoryGB should be at least 4 times or more of vcores!")
 			}
 		}
 
-		if writeToDB {
+		if dbParam.writeToDB {
 			log.Println("Write to resource-manager db...")
-			data := &infra.ClusterConfigInsert{
-				ClusterName:    info.ClusterName,
-				Host:           info.Host,
-				RootCuNum:      info.Vcores,
-				BasicKey:       info.BasicKey,
-				RmHost:         info.YarnResourceManager,
-				NmHost:         info.NameNodeHost,
-				ClusterType:    info.Env,
-				HadoopMasterIp: info.HadoopMasterIp,
-			}
-
-			id, err := infra.InsertClusterConfig(dbConfig, data)
+			dbConnInfo := dbParam.ToDBConnectInfo()
+			data := info.ToClusterConfigInsert()
+			id, err := infra.InsertClusterConfig(dbConnInfo, data)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -116,36 +124,36 @@ Show info only:
 func init() {
 	rootCmd.AddCommand(kdeCmd)
 
-	kdeCmd.Flags().StringVarP(&kdeConfig.host, "host", "", "", "KDE host (required)")
-	kdeCmd.Flags().IntVarP(&kdeConfig.port, "port", "", 0, "KDE port (required)")
-	kdeCmd.Flags().StringVarP(&kdeConfig.username, "username", "", "",
+	kdeCmd.Flags().StringVarP(&kdeParam.host, flagHost, "", "", "KDE host (required)")
+	kdeCmd.Flags().IntVarP(&kdeParam.port, flagPort, "", 0, "KDE port (required)")
+	kdeCmd.Flags().StringVarP(&kdeParam.username, flagUsername, "", "",
 		"KDE username (required)")
-	kdeCmd.Flags().StringVarP(&kdeConfig.password, "password", "", "",
+	kdeCmd.Flags().StringVarP(&kdeParam.password, flagPassword, "", "",
 		"KDE password (required)")
 
-	kdeCmd.Flags().StringVarP(&kdeType, "type", "", "",
+	kdeCmd.Flags().StringVarP(&kdeParam.kdeType, flagType, "", "",
 		"KDE type: online/offline (required)")
 
-	kdeCmd.Flags().BoolVarP(&writeToDB, "write-to-db", "", false,
+	kdeCmd.Flags().BoolVarP(&dbParam.writeToDB, flagWriteToDb, "", false,
 		"Whether write to DB, default to false.")
 
-	kdeCmd.Flags().BoolVarP(&ignoreError, "ignore-error", "", false,
+	kdeCmd.Flags().BoolVarP(&dbParam.ignoreError, flagIgnoreError, "", false,
 		"Whether ignore errors, default to false.")
 
-	kdeCmd.Flags().StringVarP(&dbConfig.Host, "db-host", "", "",
+	kdeCmd.Flags().StringVarP(&dbParam.host, flagDbHost, "", "",
 		"DB host (required if write-to-db is true)")
-	kdeCmd.Flags().IntVarP(&dbConfig.Port, "db-port", "", 0,
+	kdeCmd.Flags().IntVarP(&dbParam.port, flagDbPort, "", 0,
 		"DB port (required if write-to-db is true)")
-	kdeCmd.Flags().StringVarP(&dbConfig.Username, "db-username", "", "",
+	kdeCmd.Flags().StringVarP(&dbParam.username, flagDbUsername, "", "",
 		"DB username (required if write-to-db is true)")
-	kdeCmd.Flags().StringVarP(&dbConfig.Password, "db-password", "", "",
+	kdeCmd.Flags().StringVarP(&dbParam.password, flagDbPassword, "", "",
 		"DB password (required if write-to-db is true)")
-	kdeCmd.Flags().StringVarP(&dbConfig.Database, "database", "", "resource_manager",
+	kdeCmd.Flags().StringVarP(&dbParam.database, flagDatabase, "", "resource_manager",
 		"DB database")
 
-	_ = kdeCmd.MarkFlagRequired("host")
-	_ = kdeCmd.MarkFlagRequired("port")
-	_ = kdeCmd.MarkFlagRequired("username")
-	_ = kdeCmd.MarkFlagRequired("password")
-	_ = kdeCmd.MarkFlagRequired("type")
+	_ = kdeCmd.MarkFlagRequired(flagHost)
+	_ = kdeCmd.MarkFlagRequired(flagPort)
+	_ = kdeCmd.MarkFlagRequired(flagUsername)
+	_ = kdeCmd.MarkFlagRequired(flagPassword)
+	_ = kdeCmd.MarkFlagRequired(flagType)
 }
