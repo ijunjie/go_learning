@@ -1,88 +1,151 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
-	"errors"
+	"cluster-register/infra"
+	"cluster-register/kde"
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
+	"log"
 )
 
-var KdeHost string
-var KdePort int
-var KdeUsername string
-var KdePassword string
-var WriteToDB bool
-var MySqlHost string
-var MySqlPort int
-var MySqlUsername string
-var MySqlPassword string
+type kdeConfigParam = struct {
+	host     string
+	port     int
+	username string
+	password string
+}
 
-// kdeCmd represents the kde command
+var kdeConfig = &kdeConfigParam{}
+var kdeType string
+var writeToDB = false
+var dbConfig = &infra.DBConfigParam{}
+var ignoreError = false
+
 var kdeCmd = &cobra.Command{
-	Use:   "kde",
+	Use:   "kde --host=kde-host --port=8080 --username=admin --password=admin --type={online|offline} [...other flags]",
 	Short: "Register KDE to resource-manager.",
-	Long:  `Register KDE(ambari) as cluster_config to resource-manager.`,
-	Args: func(cmd *cobra.Command, args []string) error {
+	Example: `
+Write to DB:
 
-		if len(args) != 5 || len(args) != 9 {
-			return errors.New("requires at least one arg")
+./cluster-register kde --host=192.168.10.10 --port=8080 --username=admin --password=admin --type=online \ 
+--write-to-db --db-host=192.168.10.10 --db-port=3306 --db-username=myusername --db-password=mypassword
+
+Show info only:
+
+./cluster-register kde --host=192.168.10.10 --port=8080 --username=admin --password=admin --type=online`,
+	Long: `Register KDE(ambari) as a cluster_config to resource-manager.`,
+	Args: cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		if kdeType != "online" && kdeType != "offline" {
+			log.Printf("Error: flag \"%s\" value should be \"online\" or \"offline\"\n", "type")
+			return
+		}
+		if writeToDB {
+			undefinedFlag := 0
+			if dbConfig.Host == "" {
+				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-host")
+				undefinedFlag = undefinedFlag + 1
+			}
+			if dbConfig.Port == 0 {
+				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-port")
+				undefinedFlag = undefinedFlag + 1
+			}
+			if dbConfig.Username == "" {
+				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-username")
+				undefinedFlag = undefinedFlag + 1
+			}
+			if dbConfig.Password == "" {
+				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-password")
+				undefinedFlag = undefinedFlag + 1
+			}
+			if undefinedFlag > 0 {
+				log.Println()
+				fmt.Printf("If \"%s\" is true, flags below are required: \n", "write-to-db")
+				fmt.Println("\t --db-host")
+				fmt.Println("\t --db-port")
+				fmt.Println("\t --db-username")
+				fmt.Println("\t --db-password")
+				return
+			}
 		}
 
-		return fmt.Errorf("invalid color specified: %s", args[0])
+		// 不需要 http://, e.g: 10.69.75.29:8080
+
+		info, err := kde.KdeInfo(kdeConfig.host, kdeConfig.port, kdeConfig.username, kdeConfig.password, kdeType)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		json, _ := json.MarshalIndent(*info, "", "  ")
+		log.Println("kde info: ")
+		fmt.Println(string(json))
+
+		quarterMem := info.MemGB / 4
+		badRatio := quarterMem < info.Vcores
+		if badRatio {
+			if !ignoreError {
+				log.Fatalf("\033[1;37;41m%s\033[0m\n",
+					"Error: TotalMemoryGB should be at least 4 times or more of vcores!")
+			}
+		}
+
+		if writeToDB {
+			log.Println("Write to resource-manager db...")
+			data := &infra.ClusterConfigInsert{
+				ClusterName:    info.ClusterName,
+				Host:           info.Host,
+				RootCuNum:      info.Vcores,
+				BasicKey:       info.BasicKey,
+				RmHost:         info.YarnResourceManager,
+				NmHost:         info.NameNodeHost,
+				ClusterType:    info.Env,
+				HadoopMasterIp: info.HadoopMasterIp,
+			}
+
+			id, err := infra.InsertClusterConfig(dbConfig, data)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("\033[1;37;42m%s\033[0m\n", fmt.Sprintf("SUCCESS: Inserted ID=%d", id))
+		}
+
 	},
-	//Run: func(cmd *cobra.Command, args []string) {
-	//	fmt.Printf("host: %s \n", KdeHost)
-	//	fmt.Printf("port: %d \n", KdePort)
-	//	fmt.Printf("username: %s \n", KdeUsername)
-	//	fmt.Printf("password: %s \n", KdePassword)
-	//},
 }
 
 func init() {
 	rootCmd.AddCommand(kdeCmd)
 
-	// Here you will define your flags and configuration settings.
+	kdeCmd.Flags().StringVarP(&kdeConfig.host, "host", "", "", "KDE host (required)")
+	kdeCmd.Flags().IntVarP(&kdeConfig.port, "port", "", 0, "KDE port (required)")
+	kdeCmd.Flags().StringVarP(&kdeConfig.username, "username", "", "",
+		"KDE username (required)")
+	kdeCmd.Flags().StringVarP(&kdeConfig.password, "password", "", "",
+		"KDE password (required)")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// kdeCmd.PersistentFlags().String("foo", "", "A help for foo")
+	kdeCmd.Flags().StringVarP(&kdeType, "type", "", "",
+		"KDE type: online/offline (required)")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// kdeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	kdeCmd.Flags().StringVarP(&KdeHost, "host", "", "", "KDE host (required)")
+	kdeCmd.Flags().BoolVarP(&writeToDB, "write-to-db", "", false,
+		"Whether write to DB, default to false.")
+
+	kdeCmd.Flags().BoolVarP(&ignoreError, "ignore-error", "", false,
+		"Whether ignore errors, default to false.")
+
+	kdeCmd.Flags().StringVarP(&dbConfig.Host, "db-host", "", "",
+		"DB host (required if write-to-db is true)")
+	kdeCmd.Flags().IntVarP(&dbConfig.Port, "db-port", "", 0,
+		"DB port (required if write-to-db is true)")
+	kdeCmd.Flags().StringVarP(&dbConfig.Username, "db-username", "", "",
+		"DB username (required if write-to-db is true)")
+	kdeCmd.Flags().StringVarP(&dbConfig.Password, "db-password", "", "",
+		"DB password (required if write-to-db is true)")
+	kdeCmd.Flags().StringVarP(&dbConfig.Database, "database", "", "resource_manager",
+		"DB database")
+
 	_ = kdeCmd.MarkFlagRequired("host")
-	kdeCmd.Flags().IntVarP(&KdePort, "port", "", 8080, "KDE port (required)")
 	_ = kdeCmd.MarkFlagRequired("port")
-	kdeCmd.Flags().StringVarP(&KdeUsername, "username", "", "ec_admin", "KDE username (required)")
 	_ = kdeCmd.MarkFlagRequired("username")
-	kdeCmd.Flags().StringVarP(&KdePassword, "password", "", "", "KDE password (required)")
 	_ = kdeCmd.MarkFlagRequired("password")
-
-	kdeCmd.Flags().BoolVarP(&WriteToDB, "write-to-db", "", false, "If write to DB. Default to false.")
-
-	if WriteToDB {
-		kdeCmd.Flags().StringVarP(&MySqlHost, "mysql-host", "", "", "MySQL host (required if write-to-db is true)")
-		_ = kdeCmd.MarkFlagRequired("mysql-host")
-		kdeCmd.Flags().IntVarP(&MySqlPort, "mysql-port", "", 3306, "MySQL port (required if write-to-db is true)")
-		_ = kdeCmd.MarkFlagRequired("mysql-port")
-		kdeCmd.Flags().StringVarP(&MySqlUsername, "mysql-username", "", "", "MySQL username (required if write-to-db is true)")
-		_ = kdeCmd.MarkFlagRequired("mysql-username")
-		kdeCmd.Flags().StringVarP(&MySqlPassword, "mysql-password", "", "", "MySQL password (required if write-to-db is true)")
-		_ = kdeCmd.MarkFlagRequired("mysql-password")
-	}
+	_ = kdeCmd.MarkFlagRequired("type")
 }
