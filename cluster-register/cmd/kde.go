@@ -40,7 +40,7 @@ var kdeParam = &kdeParamStruct{}
 var dbParam = &dbParamStruct{}
 
 var kdeCmd = &cobra.Command{
-	Use:   "kde --host=kde-host --port=8080 --username=admin --password=admin --type={online|offline} [...other flags]",
+	Use:   "kde",
 	Short: "Register KDE to resource-manager.",
 	Example: `
 Write to DB:
@@ -61,19 +61,19 @@ Show info only:
 		if dbParam.writeToDB {
 			undefinedFlag := 0
 			if dbParam.host == "" {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-host")
+				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbHost)
 				undefinedFlag = undefinedFlag + 1
 			}
 			if dbParam.port == 0 {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-port")
+				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbPort)
 				undefinedFlag = undefinedFlag + 1
 			}
 			if dbParam.username == "" {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-username")
+				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbUsername)
 				undefinedFlag = undefinedFlag + 1
 			}
 			if dbParam.password == "" {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", "db-password")
+				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbPassword)
 				undefinedFlag = undefinedFlag + 1
 			}
 			if undefinedFlag > 0 {
