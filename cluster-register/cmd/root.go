@@ -4,6 +4,7 @@ import (
 	"cluster-register/infra"
 	"fmt"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 
 	"github.com/spf13/viper"
@@ -11,6 +12,7 @@ import (
 
 // 子命令通用 flag names
 const (
+	flagType        = "type"
 	flagWriteToDb   = "write-to-db"
 	flagIgnoreError = "ignore-error"
 	flagDbHost      = "db-host"
@@ -31,7 +33,41 @@ type dbParamStruct struct {
 	database    string
 }
 
-func (param *dbParamStruct) ToDBConnectInfo() *infra.DBConnectInfo {
+func (param *dbParamStruct) checkRequired() bool {
+	if param.writeToDB {
+		undefinedFlag := 0
+		if param.host == "" {
+			log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbHost)
+			undefinedFlag = undefinedFlag + 1
+		}
+		if param.port == 0 {
+			log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbPort)
+			undefinedFlag = undefinedFlag + 1
+		}
+		if param.username == "" {
+			log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbUsername)
+			undefinedFlag = undefinedFlag + 1
+		}
+		if param.password == "" {
+			log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbPassword)
+			undefinedFlag = undefinedFlag + 1
+		}
+		if undefinedFlag > 0 {
+			log.Println()
+			fmt.Printf("If \"%s\" is true, flags below are required: \n", flagWriteToDb)
+			fmt.Printf("\t --%s\n", flagDbHost)
+			fmt.Printf("\t --%s\n", flagDbPort)
+			fmt.Printf("\t --%s\n", flagDbUsername)
+			fmt.Printf("\t --%s\n", flagDbPassword)
+			return false
+		} else {
+			return true
+		}
+	}
+	return true
+}
+
+func (param *dbParamStruct) toDBConnectInfo() *infra.DBConnectInfo {
 	return &infra.DBConnectInfo{
 		Host:     param.host,
 		Port:     param.port,
@@ -40,6 +76,8 @@ func (param *dbParamStruct) ToDBConnectInfo() *infra.DBConnectInfo {
 		Database: param.database,
 	}
 }
+
+var dbParam *dbParamStruct
 
 var cfgFile string
 

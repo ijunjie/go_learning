@@ -14,7 +14,6 @@ const (
 	flagPort     = "port"
 	flagUsername = "username"
 	flagPassword = "password"
-	flagType     = "type"
 )
 
 type kdeParamStruct struct {
@@ -35,9 +34,7 @@ func (param *kdeParamStruct) toKdeInfoRequest() *kde.KdeInfoRequest {
 	}
 }
 
-var kdeParam = &kdeParamStruct{}
-
-var dbParam = &dbParamStruct{}
+var kdeParam *kdeParamStruct
 
 var kdeCmd = &cobra.Command{
 	Use:   "kde",
@@ -58,33 +55,9 @@ Show info only:
 			log.Printf("Error: flag \"%s\" value should be \"online\" or \"offline\"\n", flagType)
 			return
 		}
-		if dbParam.writeToDB {
-			undefinedFlag := 0
-			if dbParam.host == "" {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbHost)
-				undefinedFlag = undefinedFlag + 1
-			}
-			if dbParam.port == 0 {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbPort)
-				undefinedFlag = undefinedFlag + 1
-			}
-			if dbParam.username == "" {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbUsername)
-				undefinedFlag = undefinedFlag + 1
-			}
-			if dbParam.password == "" {
-				log.Printf("Error: required flag(s) \"%s\" not set\n", flagDbPassword)
-				undefinedFlag = undefinedFlag + 1
-			}
-			if undefinedFlag > 0 {
-				log.Println()
-				fmt.Printf("If \"%s\" is true, flags below are required: \n", flagWriteToDb)
-				fmt.Printf("\t --%s\n", flagDbHost)
-				fmt.Printf("\t --%s\n", flagDbPort)
-				fmt.Printf("\t --%s\n", flagDbUsername)
-				fmt.Printf("\t --%s\n", flagDbPassword)
-				return
-			}
+		ok := dbParam.checkRequired()
+		if !ok {
+			return
 		}
 
 		// 不需要 http://, e.g: 10.69.75.29:8080
@@ -109,7 +82,7 @@ Show info only:
 
 		if dbParam.writeToDB {
 			log.Println("Write to resource-manager db...")
-			dbConnInfo := dbParam.ToDBConnectInfo()
+			dbConnInfo := dbParam.toDBConnectInfo()
 			data := info.ToClusterConfigInsert()
 			id, err := infra.InsertClusterConfig(dbConnInfo, data)
 			if err != nil {
@@ -123,6 +96,9 @@ Show info only:
 
 func init() {
 	rootCmd.AddCommand(kdeCmd)
+
+	kdeParam = &kdeParamStruct{}
+	dbParam = &dbParamStruct{}
 
 	kdeCmd.Flags().StringVarP(&kdeParam.host, flagHost, "", "", "KDE host (required)")
 	kdeCmd.Flags().IntVarP(&kdeParam.port, flagPort, "", 0, "KDE port (required)")

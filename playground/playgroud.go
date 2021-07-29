@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type RegisterReq struct {
 	Name  string
@@ -28,6 +31,14 @@ func main() {
 		return a * 2
 	})
 	fmt.Println(r)
+
+	var v int64 = 201131769856
+	//x := fmt.Sprintf("%.f", float64(v)/float64(1024*1024*1024))
+	var y = int64(float64(v) / float64(1024*1024*1024))
+	fmt.Println(y)
+
+	min := int64(math.Min(float64(80), float64(y/4)))
+	fmt.Println(min)
 	//var a *Foo
 	//var b Foo
 	//fmt.Println(&a)
