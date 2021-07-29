@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 // HttpGet http get with auth
-func HttpGet(url, username, password string) ([]byte, error) {
+func HttpGet(url, username, password string, timeoutSeconds int) ([]byte, error) {
 	req, err1 := http.NewRequest("GET", url, nil)
 	if err1 != nil {
 		return nil, err1
@@ -17,7 +18,9 @@ func HttpGet(url, username, password string) ([]byte, error) {
 		req.SetBasicAuth(username, password)
 	}
 
-	cli := &http.Client{}
+	cli := &http.Client{
+		Timeout: time.Duration(timeoutSeconds) * time.Second,
+	}
 	resp, err2 := cli.Do(req)
 	if err2 != nil {
 		return nil, err2

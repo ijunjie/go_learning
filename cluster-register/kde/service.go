@@ -45,37 +45,38 @@ func (info *KdeInfoResult) ToClusterConfigInsert() *infra.ClusterConfigInsert {
 		RmHost:         info.YarnResourceManager,
 		NmHost:         info.NameNodeHost,
 		ClusterType:    info.Env,
+		ClusterKind:    0,
 		HadoopMasterIp: info.HadoopMasterIp,
 	}
 }
 
-func KdeInfo(request *KdeInfoRequest) (*KdeInfoResult, error) {
+func KdeInfo(request *KdeInfoRequest, timeoutSeconds int) (*KdeInfoResult, error) {
 	// kdeHost string, kdePort int, username, password, kdeType string
 	kdeHost, kdePort, username, password, kdeType := request.KdeHost, request.KdePort, request.Username, request.Password, request.KdeType
 	ambari := fmt.Sprintf("%s:%d", kdeHost, kdePort)
-	clusterName, err1 := clusterName(ambari, username, password)
+	clusterName, err1 := clusterName(ambari, username, password, timeoutSeconds)
 	if err1 != nil {
 		return nil, err1
 	}
 
-	yarnResourceManager, err2 := yarnResourceManager(ambari, username, password, clusterName)
+	yarnResourceManager, err2 := yarnResourceManager(ambari, username, password, clusterName, timeoutSeconds)
 	if err2 != nil {
 		return nil, err2
 	}
 
-	nameNodeHost, err3 := nameNodeHost(ambari, username, password, clusterName)
+	nameNodeHost, err3 := nameNodeHost(ambari, username, password, clusterName, timeoutSeconds)
 	if err3 != nil {
 		return nil, err3
 	}
 	host := fmt.Sprintf("http://%s", ambari)
 	basicKey := base64Encode(username, password)
 
-	vcores, mem, err4 := vcoresAndMem(yarnResourceManager)
+	vcores, mem, err4 := vcoresAndMem(yarnResourceManager, timeoutSeconds)
 	if err4 != nil {
 		return nil, err4
 	}
 	memGB := mem / 1024
-	envNumber := onlineOrOffline(kdeType)
+	envNumber := infra.TypeNumber(kdeType)
 
 	return &KdeInfoResult{
 		ClusterName:         clusterName,
@@ -98,17 +99,10 @@ func base64Encode(username, password string) string {
 	return encodeString
 }
 
-func onlineOrOffline(env string) int {
-	if env == "online" {
-		return 0
-	}
-	return 1
-}
-
 // parse cluster name from ambari-api
-func clusterName(ambari, username, password string) (string, error) {
+func clusterName(ambari, username, password string, timeoutSeconds int) (string, error) {
 	url := fmt.Sprintf(clusterUrlTmpl, ambari)
-	body, err := infra.HttpGet(url, username, password)
+	body, err := infra.HttpGet(url, username, password, timeoutSeconds)
 	if err != nil {
 		return "", err
 	}
@@ -129,10 +123,10 @@ type cluster struct {
 }
 
 // --- fetch yarn server
-func yarnResourceManager(ambari, username, password, clustername string) (string, error) {
+func yarnResourceManager(ambari, username, password, clustername string, timeoutSeconds int) (string, error) {
 	url := fmt.Sprintf(yarnSiteUrlTmpl, ambari, clustername)
 
-	body, err1 := infra.HttpGet(url, username, password)
+	body, err1 := infra.HttpGet(url, username, password, timeoutSeconds)
 	if err1 != nil {
 		return "", err1
 	}
@@ -150,15 +144,15 @@ func yarnResourceManager(ambari, username, password, clustername string) (string
 			targetHref = item.Href
 		}
 	}
-	yrm, err2 := fetchYrnResourceManager(username, password, targetHref)
+	yrm, err2 := fetchYrnResourceManager(username, password, targetHref, timeoutSeconds)
 	if err2 != nil {
 		return "", err2
 	}
 	return yrm, nil
 }
 
-func fetchYrnResourceManager(username, password, url string) (string, error) {
-	body, err := infra.HttpGet(url, username, password)
+func fetchYrnResourceManager(username, password, url string, timeoutSeconds int) (string, error) {
+	body, err := infra.HttpGet(url, username, password, timeoutSeconds)
 	if err != nil {
 		return "", err
 	}
@@ -178,9 +172,9 @@ type property struct {
 }
 
 // --- namenode
-func nameNodeHost(ambari, username, password, clustername string) (string, error) {
+func nameNodeHost(ambari, username, password, clustername string, timeoutSeconds int) (string, error) {
 	url := fmt.Sprintf(coreSiteUrlTmpl, ambari, clustername)
-	body, err1 := infra.HttpGet(url, username, password)
+	body, err1 := infra.HttpGet(url, username, password, timeoutSeconds)
 	if err1 != nil {
 		return "", err1
 	}
@@ -197,15 +191,15 @@ func nameNodeHost(ambari, username, password, clustername string) (string, error
 			targetHref = item.Href
 		}
 	}
-	nameNode, err2 := fetchDefaultFS(username, password, targetHref)
+	nameNode, err2 := fetchDefaultFS(username, password, targetHref, timeoutSeconds)
 	if err2 != nil {
 		return "", err2
 	}
 	return nameNode, nil
 }
 
-func fetchDefaultFS(username, password, url string) (string, error) {
-	body, err := infra.HttpGet(url, username, password)
+func fetchDefaultFS(username, password, url string, timeoutSeconds int) (string, error) {
+	body, err := infra.HttpGet(url, username, password, timeoutSeconds)
 	if err != nil {
 		return "", err
 	}
@@ -234,9 +228,9 @@ type item0 struct {
 }
 
 // --- vcores and mem
-func vcoresAndMem(yrm string) (int, int, error) {
+func vcoresAndMem(yrm string, timeoutSeconds int) (int, int, error) {
 	url := fmt.Sprintf(metricsUrlTmpl, yrm)
-	body, err := infra.HttpGet(url, "", "")
+	body, err := infra.HttpGet(url, "", "", timeoutSeconds)
 	if err != nil {
 		return 0, 0, err
 	}

@@ -24,11 +24,14 @@ type ClusterConfigInsert struct {
 	RmHost         string
 	NmHost         string
 	ClusterType    int
+	ClusterKind    int
 	HadoopMasterIp string
 }
 
 const (
-	insertsql = `INSERT INTO cluster_config (cluster_name,host,root_cu_num,basic_key,rm_host,nm_host,is_default,timestamp,file_type,cluster_type,cluster_kind,hadoop_master_ip,ingress) VALUES ( ?, ?, ?, ?, ?, ?, 1, now(), 'core-site,hdfs-site,hive-site,yarn-site,spark2-defaults', ?, 0, ?, '{"kdm":"http://some-addr"}')`
+	insertsql = `INSERT INTO cluster_config 
+    (cluster_name,host,root_cu_num,basic_key,rm_host,nm_host,is_default,timestamp,file_type,cluster_type,cluster_kind,hadoop_master_ip,ingress) 
+VALUES ( ?, ?, ?, ?, ?, ?, 1, now(), 'core-site,hdfs-site,hive-site,yarn-site,spark2-defaults', ?, ?, ?, '{"kdm":"http://some-addr"}')`
 )
 
 func InsertClusterConfig(dbConfig *DBConnectInfo, data *ClusterConfigInsert) (int64, error) {
@@ -65,6 +68,7 @@ func InsertClusterConfig(dbConfig *DBConnectInfo, data *ClusterConfigInsert) (in
 		data.RmHost,
 		data.NmHost,
 		data.ClusterType,
+		data.ClusterKind,
 		data.HadoopMasterIp,
 	)
 	if err2 != nil {
@@ -79,4 +83,16 @@ func InsertClusterConfig(dbConfig *DBConnectInfo, data *ClusterConfigInsert) (in
 
 	return id, nil
 
+}
+
+func TypeNumber(env string) int {
+	if env == "online" {
+		return 0
+	} else if env == "offline" {
+		return 1
+	} else if env == "endpoint" {
+		return 2
+	} else {
+		return -1
+	}
 }
