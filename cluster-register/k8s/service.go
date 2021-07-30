@@ -128,8 +128,10 @@ func K8sInfo(request *K8sInfoRequest, timeoutSeconds int) (*K8sInfoResult, error
 	if errSecret != nil {
 		return nil, errSecret
 	}
-	log.Printf("CACRT=%s\n", base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]))
-	log.Printf("TOKEN=%s\n", base64.StdEncoding.EncodeToString(secret.Data["token"]))
+	caCrt := base64.StdEncoding.EncodeToString(secret.Data["ca.crt"])
+	token := base64.StdEncoding.EncodeToString(secret.Data["token"])
+	//log.Printf("CACRT=%s\n", caCrt)
+	//log.Printf("TOKEN=%s\n", token)
 
 	list, err4 := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
 		FieldSelector: "spec.unschedulable=false",
@@ -154,10 +156,13 @@ func K8sInfo(request *K8sInfoRequest, timeoutSeconds int) (*K8sInfoResult, error
 	totalCu := int64(math.Min(float64(totalCpu), float64(totalMemGi/4)))
 	fmt.Printf("total Cu=%v\n", totalCu)
 
+	// '{\"ca.crt\":"$CA_CRT",\"token\":"$DATA_TOKEN"}'
+	basicKey := fmt.Sprintf("{\"ca.crt\":\"%s\",\"token\":\"%s\"}", caCrt, token)
+
 	return &K8sInfoResult{
 		ClusterName: request.ClusterName,
 		Host:        config.Host,
-		BasicKey:    "",
+		BasicKey:    basicKey,
 		Cpu:         int(totalCpu),
 		Cu:          int(totalCu),
 		MemGB:       int(totalMemGi),
