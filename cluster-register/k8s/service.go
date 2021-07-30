@@ -151,7 +151,7 @@ func K8sInfo(request *K8sInfoRequest, timeoutSeconds int) (*K8sInfoResult, error
 	totalMemGi := int64(float64(quantityMem.Value()) / float64(1024*1024*1024))
 	fmt.Printf("total mem Gi= %v\n", totalMemGi)
 
-	totalCu := int64(math.Min(float64(80), float64(totalMemGi/4)))
+	totalCu := int64(math.Min(float64(totalCpu), float64(totalMemGi/4)))
 	fmt.Printf("total Cu=%v\n", totalCu)
 
 	return &K8sInfoResult{
