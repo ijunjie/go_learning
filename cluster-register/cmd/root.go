@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"cluster-register/infra"
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
@@ -59,11 +58,8 @@ func (param *commonParamStruct) checkRequired() bool {
 			undefinedFlag = undefinedFlag + 1
 		}
 		if undefinedFlag > 0 {
-			fmt.Printf("If \"%s\" is true, flags below are required: \n", flagWriteToDb)
-			fmt.Printf("\t --%s\n", flagDbHost)
-			fmt.Printf("\t --%s\n", flagDbPort)
-			fmt.Printf("\t --%s\n", flagDbUsername)
-			fmt.Printf("\t --%s\n", flagDbPassword)
+			log.Printf("If \"%s\" is true, \"%s\",\"%s\",\"%s\",\"%s\" are required: \n", flagWriteToDb,
+				flagDbHost, flagDbPort, flagDbUsername, flagDbPassword)
 			return false
 		} else {
 			return true
@@ -150,6 +146,6 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		_, _ = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		log.Fatalln("Using config file:", viper.ConfigFileUsed())
 	}
 }

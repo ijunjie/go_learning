@@ -148,13 +148,13 @@ func K8sInfo(request *K8sInfoRequest, timeoutSeconds int) (*K8sInfoResult, error
 	}
 
 	totalCpu := quantityCpu.Value()
-	fmt.Printf("total cpu value= %v (%v)\n", totalCpu, quantityCpu.Format)
-	fmt.Printf("total mem bytes= %v (%v)\n", quantityMem.Value(), quantityMem.Format)
+	log.Printf("total cpu value= %v (%v)\n", totalCpu, quantityCpu.Format)
+	log.Printf("total mem bytes= %v (%v)\n", quantityMem.Value(), quantityMem.Format)
 	totalMemGi := int64(float64(quantityMem.Value()) / float64(1024*1024*1024))
-	fmt.Printf("total mem Gi= %v\n", totalMemGi)
+	log.Printf("total mem Gi= %v\n", totalMemGi)
 
 	totalCu := int64(math.Min(float64(totalCpu), float64(totalMemGi/4)))
-	fmt.Printf("total Cu=%v\n", totalCu)
+	log.Printf("total Cu=%v\n", totalCu)
 
 	// '{\"ca.crt\":"$CA_CRT",\"token\":"$DATA_TOKEN"}'
 	basicKey := fmt.Sprintf("{\"ca.crt\":\"%s\",\"token\":\"%s\"}", caCrt, token)

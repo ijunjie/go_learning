@@ -43,7 +43,7 @@ Show info only:
 	Args: cobra.NoArgs,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if commonParam.clusterType != "online" && commonParam.clusterType != "offline" {
-			fmt.Printf("Error: flag \"%s\" value should be \"{online|offline|endpoint}\"\n", flagType)
+			log.Printf("Error: flag \"%s\" value should be \"{online|offline|endpoint}\"\n", flagType)
 			os.Exit(0)
 		}
 	},
@@ -56,7 +56,7 @@ Show info only:
 
 		json, _ := json.MarshalIndent(*info, "", "  ")
 		log.Println("k8s info: ")
-		fmt.Println(string(json))
+		log.Println(string(json))
 
 		if commonParam.writeToDB {
 			log.Println("Write to resource-manager db...")
