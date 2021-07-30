@@ -6,13 +6,13 @@ import (
 )
 
 type Data struct {
-	complax []int
+	complax  []int
 	instance InnerData
-	ptr *InnerData
+	ptr      *InnerData
 }
 
 type InnerData struct {
-	 a int
+	a int
 }
 
 // 值传递测试函数
@@ -26,12 +26,11 @@ func passByValue(inFunc Data) Data {
 	return inFunc
 }
 
-
 func TestPassByValue(t *testing.T) {
-	in := Data {
-		complax: []int{1,2,3},
+	in := Data{
+		complax:  []int{1, 2, 3},
 		instance: InnerData{5},
-		ptr: &InnerData{1},
+		ptr:      &InnerData{1},
 	}
 
 	fmt.Printf("in value: %+v\n", in)
@@ -45,7 +44,6 @@ func TestPassByValue(t *testing.T) {
 	fmt.Printf("out ptr: %p\n", &out)
 	fmt.Printf("out ptr value: %v\n", *out.ptr)
 	fmt.Println("************")
-
 
 	fmt.Printf("in again value: %+v\n", in)
 	fmt.Printf("in again ptr: %p\n", &in)

@@ -13,12 +13,10 @@ import (
 // 4. 可变参数
 // 5. defer
 
-
-func returnMultiValue()(int, int) {
+func returnMultiValue() (int, int) {
 	rand.Seed(time.Now().Unix()) // 注意，需要加这一句才能生成随机数
 	return rand.Intn(10), rand.Intn(20)
 }
-
 
 func slowFun(op int) int {
 	time.Sleep(time.Second * 1)
@@ -41,7 +39,6 @@ func TestFn(t *testing.T) {
 	_ = timeSpent(slowFun)(10)
 
 }
-
 
 func sum(ops ...int) int {
 	ret := 0

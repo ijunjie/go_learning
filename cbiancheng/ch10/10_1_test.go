@@ -19,7 +19,7 @@ func TestReflect(t *testing.T) {
 	aCat := cat{}
 	typeOfCat := reflect.TypeOf(aCat)
 	t.Log(typeOfCat.Name(), typeOfCat.Kind())
-	for i:=0; i<typeOfCat.NumField();i++ {
+	for i := 0; i < typeOfCat.NumField(); i++ {
 		fieldType := typeOfCat.Field(i)
 		fmt.Printf("name: %v  tag: '%v'\n", fieldType.Name, fieldType.Tag)
 	}

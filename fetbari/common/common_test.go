@@ -17,7 +17,6 @@ func TestBase64Encode(t *testing.T) {
 	assert.Equal(t, "YWRtaW46YWRtaW4=", encode)
 }
 
-
 func TestHttpGet(t *testing.T) {
 	body, _ := HttpGet("http://httpbin.org/json", "", "")
 	var res Resp
@@ -31,6 +30,5 @@ type Resp struct {
 
 type SlideShow struct {
 	Author string `json:"author"`
-	Title string `json:"title"`
-
+	Title  string `json:"title"`
 }

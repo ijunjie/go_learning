@@ -10,7 +10,7 @@ import (
 func TestStringFunc(t *testing.T) {
 	s := "A,B,C"
 	parts := strings.Split(s, ",")
-	assert.EqualValues(t, []string{"A","B","C"}, parts)
+	assert.EqualValues(t, []string{"A", "B", "C"}, parts)
 
 	joined := strings.Join(parts, "-")
 	assert.EqualValues(t, "A-B-C", joined)

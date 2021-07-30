@@ -6,7 +6,7 @@ func main() {
 	// 示例 1 capacity 按 2 倍扩容
 	s6 := make([]int, 0)
 	fmt.Printf("The capacity of s6 is %d\n", cap(s6))
-	for i := 1; i<=5;i++ {
+	for i := 1; i <= 5; i++ {
 		s6 = append(s6, i)
 		fmt.Printf("s6(%d): len:%d, cap: %d\n", i, len(s6), cap(s6))
 	}

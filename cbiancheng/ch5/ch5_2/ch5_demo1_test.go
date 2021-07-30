@@ -4,8 +4,8 @@ import "testing"
 
 const (
 	SecondsPerMinute = 60
-	SecondsPerHour = SecondsPerMinute * 60
-	SecondsPerDay = SecondsPerHour * 24
+	SecondsPerHour   = SecondsPerMinute * 60
+	SecondsPerDay    = SecondsPerHour * 24
 )
 
 func resolveTime(seconds int) (day int, hour int, minute int) {

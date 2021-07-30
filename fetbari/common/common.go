@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-
 func HttpGet(url, username, password string) ([]byte, error) {
 	req, err1 := http.NewRequest("GET", url, nil)
 	if err1 != nil {

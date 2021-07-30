@@ -21,6 +21,8 @@ GOOS=linux GOARCH=amd64 go build -ldflags '-w -s' .
 
 进一步减小 bin 体积，使用 upx
 
+upx 是跨平台通用的，可以在 windows 使用 upx.exe 压缩 Linux ELF.
+
 ```shell
 GOOS=linux GOARCH=amd64 go build -ldflags '-w -s' . && upx ./cluster-register
 ```
@@ -91,6 +93,7 @@ go.mod 中声明依赖
 - mysql 驱动用于将集群信息写入资源管理数据库
 - 单元测试相关
 - cobra 相关
+- k8s client-go
 
 ### 3.2 代码结构
 
@@ -98,8 +101,9 @@ go.mod 中声明依赖
 - cmd 是 cobra 脚手架生成的，存放子命令, kde, k8s 都在这里
 - infra 包：基础设施，如提供 http 服务的 http.go 和提供数据库服务 data.go
 - kde 包：获取 KDE 集群相关配置的服务
+- k8s 包：获取 k8s 集群 sa 信息
 
-### 3.3 flag 设计
+### 3.3 root flag 设计
 
 全部 flag 名以 flag 开头，设计为常量。
 
@@ -107,100 +111,60 @@ db 相关 flag 是子命令共用的，因此设计为包内共享常量，设�
 
 ```c
 const (
-	flagWriteToDb   = "write-to-db"
-	flagIgnoreError = "ignore-error"
-	flagDbHost      = "db-host"
-	flagDbPort      = "db-port"
-	flagDbUsername  = "db-username"
-	flagDbPassword  = "db-password"
-	flagDatabase    = "database"
+	flagType           = "type"
+	flagWriteToDb      = "write-to-db"
+	flagIgnoreError    = "ignore-error"
+	flagDbHost         = "db-host"
+	flagDbPort         = "db-port"
+	flagDbUsername     = "db-username"
+	flagDbPassword     = "db-password"
+	flagDatabase       = "database"
+	flagTimeoutSeconds = "timeout-seconds"
 )
 ```
 
-kde.go flag 常量，仅包内使用：
-```c
-const (
-	flagHost     = "host"
-	flagPort     = "port"
-	flagUsername = "username"
-	flagPassword = "password"
-	flagType     = "type"
-)
-```
-
-### 3.4 flag 值变量设计
-
-对应 flag 设计, param 的可见性与其保持一致.
-
-对于 DB 相关 flag 值， 在 root.go 设计结构体：
+绑定变量：
 
 ```c
-type dbParamStruct struct {
-	writeToDB   bool
-	ignoreError bool
-	host        string
-	port        int
-	username    string
-	password    string
-	database    string
+type commonParamStruct struct {
+	clusterType    string
+	writeToDB      bool
+	ignoreError    bool
+	host           string
+	port           int
+	username       string
+	password       string
+	database       string
+	timeoutSeconds int
 }
 ```
 
-对于 kde flag 值，在 kde.go 设计结构体
+方法：
+- func (param *commonParamStruct) checkRequired() bool 用于校验 required 等
+- func (param *commonParamStruct) toDBConnectInfo() *infra.DBConnectInfo 转换为 dataobj
 
-```c
-type kdeParamStruct struct {
-	host     string
-	port     int
-	username string
-	password string
-	kdeType  string
-}
+init 中完成通用 flag 的解析。
+
+PersistentPreRun 是一个全局钩子，每个子命令执行前都会调用。PersistentPreRun 中执行 commonParam 的校验。
+
+
+### 3.4 subcommand 设计
+
+流程：
+
+```
+(1)kdeParam -> kdeInfoRequest -> (2)kdeInfoResult -> dataobj -> (3)insertDB
+(1)k8sParam -> k8sInfoRequest -> (2)k8sInfoResult -> dataobj -> (3)insertDB
 ```
 
+步骤 (1) 在 cmd/kde.go 和 cmd/k8s.go 中实现
+步骤 (2) 在 kde/service.go 和 k8s/service.go 中实现
+步骤 (3) 在 infra/data.go 中实现
 
+### 3.5 kde info 获取
 
-至此，kde 的 flag 共 2 类 12 个参数，kde.go 中初始化并返回指针：
-```c
-var kdeParam = &kdeParamStruct{}
-var dbParam = &dbParamStruct{}
-```
+kde/service.go 中具有关联关系的一组请求：
 
-### 3.5 init
-
-kde 的 init 函数中，首先将 kde 挂到 root 下，然后对 12 个 flag 参数做解析。
-
-最后将 5 个参数标记为 required:
-
-```c
-_ = kdeCmd.MarkFlagRequired(flagHost)
-_ = kdeCmd.MarkFlagRequired(flagPort)
-_ = kdeCmd.MarkFlagRequired(flagUsername)
-_ = kdeCmd.MarkFlagRequired(flagPassword)
-_ = kdeCmd.MarkFlagRequired(flagType)
-```
-
-### 3.6 run
-
-kdeCmd 初始化参数 Run 函数中，首先对 write-to-db 为 true 时，
-关联 flag 的 required 做了自定义校验，此处暂时未找到官方推荐做法。
-这些逻辑应该抽取到 root.go, 用于其他子命令使用。
-
-### 3.7 kde-info 获取
-
-面向对象的设计精髓在于**合适的方法出现在合适的类中**，对于 go 而言，
-**合适的函数、结构体要出现在合适的包和源码文件中**。
-
-例如 service.go 中，入参和出参的设计。
-
-service.go 中使用 http 请求和 json 解析， 将 kde 集群信息构建为 KdeInfoResult 结构体并返回。
-请求参数和相应结果设计为独立的结构体。
-
-```c
-func KdeInfo(request *KdeInfoRequest) (*KdeInfoResult, error)
-```
-
-具有关联关系的一组请求：
 ```c
 const (
 	clusterUrlTmpl  = "http://%s/api/v1/clusters"
@@ -210,15 +174,10 @@ const (
 )
 ```
 
-### 3.8 data
+### 3.5 k8s info 获取
 
-data.go 设计。参考 service.go
+k8s/service.go
 
-### 3.9 对象转换
+### 3.6 dao
 
-request 链路采用 toTarget 向底层转换；
-response 链路采用 fromTarget 向上层传递。
-
-### 3.10 异常处理
-
-异常传递，log.Fatal 退出
+infra/data.go

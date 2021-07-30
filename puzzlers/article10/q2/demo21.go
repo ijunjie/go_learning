@@ -13,7 +13,7 @@ func main() {
 	ch2 := make(chan int, 1)
 	ch2 <- 1
 	elem, ok := <-ch2
-	_,_ = elem, ok
+	_, _ = elem, ok
 
 	// 示例3。
 	var ch3 chan int

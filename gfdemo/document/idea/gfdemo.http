@@ -32,5 +32,6 @@ Cookie: gfsessionid=C1OXFUAY4X407BLBMC
 ### sign out(logged in)
 GET http://{{host}}:{{port}}/user/signout
 Cookie: gfsessionid=C1OXFUAY4X407BLBMC
+
 ###
 

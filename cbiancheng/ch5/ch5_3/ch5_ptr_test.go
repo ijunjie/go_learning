@@ -6,9 +6,9 @@ import (
 )
 
 type person struct {
-	age int
+	age  int
 	name string
-	car Car
+	car  Car
 }
 
 type Car struct {
@@ -24,9 +24,8 @@ func (p person) withAge(age int) person {
 	return p
 }
 
-
 func TestObject(t *testing.T) {
-	person := &person{2,"aaa", Car{"mycar"}}
+	person := &person{2, "aaa", Car{"mycar"}}
 	person.setAge(3)
 	fmt.Printf("person: %+v\n", *person)
 

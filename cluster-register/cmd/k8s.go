@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"cluster-register/infra"
 	"cluster-register/k8s"
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 )
 
@@ -45,7 +48,26 @@ Show info only:
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		request := k8sParam.toK8sInfoRequest()
+		info, err := k8s.K8sInfo(request, commonParam.timeoutSeconds)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		json, _ := json.MarshalIndent(*info, "", "  ")
+		log.Println("k8s info: ")
+		fmt.Println(string(json))
+
+		if commonParam.writeToDB {
+			log.Println("Write to resource-manager db...")
+			dbConnInfo := commonParam.toDBConnectInfo()
+			data := info.ToClusterConfigInsert()
+			id, err := infra.InsertClusterConfig(dbConnInfo, data)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("\033[1;37;42m%s\033[0m\n", fmt.Sprintf("SUCCESS: Inserted ID=%d", id))
+		}
 	},
 }
 

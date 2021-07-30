@@ -18,6 +18,8 @@ func HttpGet(url, username, password string, timeoutSeconds int) ([]byte, error)
 		req.SetBasicAuth(username, password)
 	}
 
+	// https://www.cnblogs.com/gaorong/p/11336834.html
+	// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 	cli := &http.Client{
 		Timeout: time.Duration(timeoutSeconds) * time.Second,
 	}

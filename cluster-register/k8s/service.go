@@ -16,6 +16,7 @@ import (
 	"log"
 	"math"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -66,6 +67,8 @@ func K8sInfo(request *K8sInfoRequest, timeoutSeconds int) (*K8sInfoResult, error
 	if err0 != nil {
 		return nil, err0
 	}
+
+	config.Timeout = time.Duration(timeoutSeconds) * time.Second
 
 	// create the clientset
 	clientset, err1 := kubernetes.NewForConfig(config)
