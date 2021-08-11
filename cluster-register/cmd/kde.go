@@ -51,7 +51,7 @@ Show info only:
 	Long: `Register KDE(ambari) as a cluster_config to resource-manager.`,
 	Args: cobra.NoArgs,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if commonParam.clusterType != "online" && commonParam.clusterType != "offline" {
+		if commonParam.clusterType != typeOnline && commonParam.clusterType != typeOffline {
 			log.Printf("Error: flag \"%s\" value should be \"{online|offline}\"\n", flagType)
 			os.Exit(0)
 		}

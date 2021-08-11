@@ -19,6 +19,9 @@ const (
 	flagDbPassword     = "db-password"
 	flagDatabase       = "database"
 	flagTimeoutSeconds = "timeout-seconds"
+	typeOnline         = "online"
+	typeOffline        = "offline"
+	typeEndpoint       = "endpoint"
 )
 
 // 子命令通用 param

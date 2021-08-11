@@ -42,7 +42,7 @@ Show info only:
 	Long: `Register K8S as a cluster_config to resource-manager.`,
 	Args: cobra.NoArgs,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if commonParam.clusterType != "online" && commonParam.clusterType != "offline" {
+		if commonParam.clusterType != typeOnline && commonParam.clusterType != typeOffline && commonParam.clusterType != typeEndpoint {
 			log.Printf("Error: flag \"%s\" value should be \"{online|offline|endpoint}\"\n", flagType)
 			os.Exit(0)
 		}
