@@ -30,8 +30,8 @@ type ClusterConfigInsert struct {
 
 const (
 	insertsql = `INSERT INTO cluster_config 
-    (cluster_name,host,root_cu_num,basic_key,rm_host,nm_host,is_default,timestamp,file_type,cluster_type,cluster_kind,hadoop_master_ip,ingress) 
-VALUES ( ?, ?, ?, ?, ?, ?, 1, now(), 'core-site,hdfs-site,hive-site,yarn-site,spark2-defaults', ?, ?, ?, '{"kdm":"http://some-addr"}')`
+    (cluster_name,host,root_cu_num,basic_key,rm_host,nm_host,timestamp,file_type,cluster_type,cluster_kind,hadoop_master_ip,ingress) 
+VALUES ( ?, ?, ?, ?, ?, ?, now(), 'core-site,hdfs-site,hive-site,yarn-site,spark2-defaults', ?, ?, ?, '{"kdm":"http://some-addr"}')`
 )
 
 func InsertClusterConfig(dbConfig *DBConnectInfo, data *ClusterConfigInsert) (int64, error) {
