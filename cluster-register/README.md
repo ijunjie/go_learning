@@ -5,12 +5,23 @@ cluster-register 用于大数据云部署后初始化 KDE 和 K8S 集群注册�
 
 ## 1. 构建
 
+设置 
+GO111MODULE=on
+GOPROXY=https://goproxy.cn,direct
+
+
 ### 1.1 交叉编译
 
 
 ```shell
 cd cluster-register
+go mod download
 GOOS=linux GOARCH=amd64 go build -ldflags '-w -s' .
+```
+
+arm
+```shell script
+GOOS=linux GOARCH=arm64 GOARM=7 go build -ldflags '-w -s' .
 ```
 
 说明：
