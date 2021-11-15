@@ -10,3 +10,4 @@ go build -ldflags '-w -s' .
 go build -ldflags '-w -s -H windowsgui' .
 ```
 
+https://rehtt.com/index.php/archives/212/
