@@ -1,9 +1,10 @@
-package main
+package mutext_test
 
 import (
 	"fmt"
 	"runtime"
 	"sync"
+	"testing"
 )
 
 var counter int = 0
@@ -15,7 +16,7 @@ func Count(lock *sync.Mutex) {
 	fmt.Println(counter)
 }
 
-func main() {
+func TestMutex(t *testing.T) {
 	lock := &sync.Mutex{}
 	for i := 0; i < 10; i++ {
 		go Count(lock)

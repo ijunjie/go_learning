@@ -1,8 +1,7 @@
-package gorouting_basic__test
+package main
 
 import (
 	"fmt"
-	"testing"
 	"time"
 )
 
@@ -10,12 +9,12 @@ func running() {
 	var times int
 	for {
 		times++
-		fmt.Println("tike", times)
+		fmt.Println("tick", times)
 		time.Sleep(time.Second)
 	}
 }
 
-func TestGoroutine(t *testing.T) {
+func main() {
 	go running()
 	/*go func() {
 		var times int
