@@ -12,7 +12,7 @@ func TestRpc(t *testing.T) {
 	go RPCServer(ch)
 	recv, err := Send(ch, "hi")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 	log.Printf("client received %v\n", recv)
 }

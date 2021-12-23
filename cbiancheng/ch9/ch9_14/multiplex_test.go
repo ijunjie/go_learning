@@ -1,7 +1,6 @@
 package ch9_14
 
 import (
-	"log"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ func TestMultiplex(t *testing.T) {
 		case ch <- 1:
 		}
 		i := <-ch
-		log.Printf("i=%v\n", i)
+		t.Logf("i=%v\n", i)
 
 	}
 
